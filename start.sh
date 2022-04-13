@@ -1,0 +1,11 @@
+yarn add express
+yarn add nodemon
+yarn add wax-on
+yarn add dotenv
+yarn add hbs
+yarn add db-migrate
+yarn add db-migrate-mysql
+yarn add mysql
+yarn add knex
+yarn add bookshelf
+yarn add forms

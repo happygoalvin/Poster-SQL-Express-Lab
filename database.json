@@ -1,0 +1,8 @@
+{
+    "dev": {
+      "driver": "mysql",
+      "user": "foo",
+      "password":"tgc16bar",
+      "database":"poster_shop"
+    }
+  }

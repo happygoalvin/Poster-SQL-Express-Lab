@@ -1,0 +1,32 @@
+{
+  "name": "poster-sql-express-lab",
+  "version": "1.0.0",
+  "description": "![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/happygoalvin/Poster-SQL-Express-Lab.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/happygoalvin/Poster-SQL-Express-Lab/issues"
+  },
+  "homepage": "https://github.com/happygoalvin/Poster-SQL-Express-Lab#readme",
+  "dependencies": {
+    "bookshelf": "^1.2.0",
+    "db-migrate": "^0.11.13",
+    "db-migrate-mysql": "^2.2.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "forms": "^1.3.2",
+    "hbs": "^4.2.0",
+    "knex": "^1.0.6",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.15",
+    "wax-on": "^1.2.2"
+  }
+}
