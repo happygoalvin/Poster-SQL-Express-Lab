@@ -1,0 +1,55 @@
+{{#extends 'base'}}
+
+{{#block 'content'}}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Cost</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Stock</th>
+            <th>Height</th>
+            <th>Width</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each posters}}
+            <tr>
+                <td>
+                    {{this.id}}
+                </td>
+                <td>
+                    {{this.title}}
+                </td>
+                <td>
+                    {{this.cost}}
+                </td>
+                <td>
+                    {{this.description}}
+                </td>
+                <td>
+                    {{this.date}}
+                </td>
+                <td>
+                    {{this.stock}}
+                </td>
+                <td>
+                    {{this.height}}
+                </td>
+                <td>
+                    {{this.width}}
+                </td>
+            <td>
+                <a href="/posters/{{this.id}}/update" class="btn btn-primary btn-sm">Update</a>
+                <a href="/posters/{{this.id}}/delete" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+            </tr>
+        {{/each}}
+    </tbody>
+</table>
+{{/block}}
+
+{{/extends}}

@@ -30,7 +30,7 @@ const posterRoutes = require('./routes/posters');
 
 async function main() {
     app.use('/', landingRoutes);
-    app.use('/api/', posterRoutes);
+    app.use('/posters', posterRoutes);
 }
 
 main();

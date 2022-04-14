@@ -9,3 +9,7 @@ yarn add mysql
 yarn add knex
 yarn add bookshelf
 yarn add forms
+yarn add express-session
+yarn add connect-flash
+yarn add session-file-store
+yarn add csurf
