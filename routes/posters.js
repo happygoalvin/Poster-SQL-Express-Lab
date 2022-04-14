@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router(); // #1 - Create a new express Router
 
 // 1. Import in the Poster model
-const { Poster } = require('../models')
+const { Poster, MediaProperty } = require('../models')
 
 // Import in the Forms
 const { createPosterForm, bootstrapField } = require('../forms');
@@ -20,36 +20,45 @@ async function getPosterById(posterId) {
     return posters;
 }
 
+async function getAllMediaProperties() {
+    const allMediaProperties = await MediaProperty.fetchAll().map( mediaProperty => {
+        return [ mediaProperty.get('id'), mediaProperty.get('name')]
+    });
+    return allMediaProperties;
+}
+
 router.get('/', async function (req, res) {
     // 2. fetch all the posters (i.e, SELECT * from posters)
 
-    let posters = await Poster.collection().fetch();
+    let posters = await Poster.collection().fetch({
+        withRelated: ['mediaProperty']
+    });
     res.render('posters/index', {
         'posters': posters.toJSON() // 3. Convert collection to JSON
     })
 })
 
 router.get('/create', async (req,res) => {
-    const posterForm = createPosterForm();
+
+    const allMediaProperties = await getAllMediaProperties();
+
+    const posterForm = createPosterForm(allMediaProperties);
     res.render('posters/create', {
         'form': posterForm.toHTML(bootstrapField)
     })
 })
 
 router.post('/create', async (req, res) => {
-    const posterForm = createPosterForm();
+
+    const allMediaProperties = await getAllMediaProperties();
+
+    const posterForm = createPosterForm(allMediaProperties);
     posterForm.handle(req, {
         'success': async (form) => {
-            const poster = new Poster();
-            poster.set('title', form.data.title);
-            poster.set('cost', form.data.cost);
-            poster.set('description', form.data.description);
-            poster.set('date', form.data.date);
-            poster.set('stock', form.data.stock);
-            poster.set('height', form.data.height);
-            poster.set('width', form.data.width);
+            // 2. Save data from form into the new product instance
+            const poster = new Poster(form.data);
             await poster.save();
-            res.redirect('/posters')
+            res.redirect('/posters');
         },
         'error': async (form) => {
             res.render('posters/create', {
@@ -62,7 +71,11 @@ router.post('/create', async (req, res) => {
 router.get('/:poster_id/update', async (req,res) => {
     // retrieve the poster
     const posters = await getPosterById(req.params.poster_id);
-    const posterForm = createPosterForm();
+
+    // fetch all Media Property
+    const allMediaProperties = await getAllMediaProperties();
+
+    const posterForm = createPosterForm(allMediaProperties);
 
     // fill in the existing fields
     posterForm.fields.title.value = posters.get('title');
@@ -72,6 +85,7 @@ router.get('/:poster_id/update', async (req,res) => {
     posterForm.fields.stock.value = posters.get('stock');
     posterForm.fields.height.value = posters.get('height');
     posterForm.fields.width.value = posters.get('width');
+    posterForm.fields.media_property_id.value = posters.get('media_property_id');
 
     res.render('posters/update', {
         'form': posterForm.toHTML(bootstrapField),
@@ -83,8 +97,11 @@ router.post('/:poster_id/update', async (req,res) => {
     // fetch the poster we want to update
     const posters = await getPosterById(req.params.poster_id)
 
+    // fetch all Media Property
+    const allMediaProperties = await getAllMediaProperties();
+
     // process the form 
-    const posterForm = createPosterForm();
+    const posterForm = createPosterForm(allMediaProperties);
     posterForm.handle(req, {
         'success': async (form) => {
             posters.set(form.data);
