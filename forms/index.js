@@ -6,7 +6,9 @@ const validators = forms.validators;
 const widgets = forms.widgets;
 
 var bootstrapField = function (name, object) {
-    if (!Array.isArray(object.widget.classes)) { object.widget.classes = []; }
+    if (!Array.isArray(object.widget.classes)) {
+        object.widget.classes = [];
+    }
 
     if (object.widget.classes.indexOf('form-control') === -1) {
         object.widget.classes.push('form-control');
@@ -57,7 +59,7 @@ const createPosterForm = (media_properties, tags) => {
             },
             'validators': [validators.date()]
         }),
-        'stock' : fields.number({
+        'stock': fields.number({
             required: true,
             errorAfterField: true,
             cssClasses: {
@@ -94,4 +96,62 @@ const createPosterForm = (media_properties, tags) => {
     })
 }
 
-module.exports = { createPosterForm, bootstrapField };
+const createRegistrationForm = () => {
+    return forms.create({
+        'username': fields.string({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            }
+        }),
+        'email': fields.string({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            }
+        }),
+        'password': fields.password({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            }
+        }),
+        'confirm_password': fields.password({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            },
+            validators: [validators.matchField('password')]
+        })
+    })
+}
+
+const createLoginForm = () => {
+    return forms.create({
+        'email': fields.string({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            }
+        }),
+        'password': fields.password({
+            required: true,
+            errorAfterField: true,
+            cssClasses: {
+                label: ['form-label']
+            }
+        }),
+    })
+}
+
+module.exports = {
+    createPosterForm,
+    createRegistrationForm,
+    createLoginForm,
+    bootstrapField
+};
