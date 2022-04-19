@@ -45,6 +45,12 @@ app.use(
   })
 );
 
+// Share the user data with hbs files
+app.use(function (req, res, next) {
+  res.locals.user = req.session.user;
+  next();
+})
+
 // import in Routes
 const landingRoutes = require('./routes/landing');
 const posterRoutes = require('./routes/posters');

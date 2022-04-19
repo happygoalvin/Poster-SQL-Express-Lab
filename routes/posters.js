@@ -14,6 +14,11 @@ const {
     bootstrapField
 } = require('../forms');
 
+// import in the CheckIfAuthenticated middleware
+const {
+    checkIfAuthenticated
+} = require('../middlewares');
+
 async function getPosterById(posterId) {
     // eqv of
     // select * from posters where id = ${productId}
@@ -51,7 +56,7 @@ router.get('/', async function (req, res) {
     })
 })
 
-router.get('/create', async (req, res) => {
+router.get('/create', checkIfAuthenticated, async (req, res) => {
 
     const allMediaProperties = await getAllMediaProperties();
 
@@ -63,7 +68,7 @@ router.get('/create', async (req, res) => {
     })
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', checkIfAuthenticated, async (req, res) => {
 
     const allMediaProperties = await getAllMediaProperties();
     const allTags = await getAllTags();
