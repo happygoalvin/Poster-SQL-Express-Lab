@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router(); // #1 - Create a new express Router
 
 // 1. Import in the Poster model
-const { Poster, MediaProperty } = require('../models')
+const { Poster, MediaProperty, Tag } = require('../models')
 
 // Import in the Forms
 const { createPosterForm, bootstrapField } = require('../forms');
@@ -14,7 +14,8 @@ async function getPosterById(posterId) {
     const posters = await Poster.where({
         'id': posterId
     }).fetch({
-        require:true // will cause an error if not found
+        require:true, // will cause an error if not found
+        withRelated: ['mediaProperty', 'tags']
     });
 
     return posters;
@@ -27,11 +28,18 @@ async function getAllMediaProperties() {
     return allMediaProperties;
 }
 
+async function getAllTags() {
+    const allTags = await Tag.fetchAll().map( tag => 
+        [tag.get('id'), tag.get('name')]
+        );
+        return allTags;
+}
+
 router.get('/', async function (req, res) {
     // 2. fetch all the posters (i.e, SELECT * from posters)
 
     let posters = await Poster.collection().fetch({
-        withRelated: ['mediaProperty']
+        withRelated: ['mediaProperty', 'tags']
     });
     res.render('posters/index', {
         'posters': posters.toJSON() // 3. Convert collection to JSON
@@ -42,7 +50,9 @@ router.get('/create', async (req,res) => {
 
     const allMediaProperties = await getAllMediaProperties();
 
-    const posterForm = createPosterForm(allMediaProperties);
+    const allTags = await getAllTags();
+
+    const posterForm = createPosterForm(allMediaProperties, allTags);
     res.render('posters/create', {
         'form': posterForm.toHTML(bootstrapField)
     })
@@ -51,13 +61,40 @@ router.get('/create', async (req,res) => {
 router.post('/create', async (req, res) => {
 
     const allMediaProperties = await getAllMediaProperties();
+    const allTags = await getAllTags();
+    const posterForm = createPosterForm(allMediaProperties, allTags);
 
-    const posterForm = createPosterForm(allMediaProperties);
     posterForm.handle(req, {
         'success': async (form) => {
-            // 2. Save data from form into the new product instance
-            const poster = new Poster(form.data);
+            
+           // create an instance of the Poster model
+           // if we refering to the MODEL directly, we are accessing the entire table
+           // if we referring to the instance of the model, then we are accessing one row
+           // eqv:
+           /*
+            insert into products (name, cost, description)
+             values (?, ?, ?)
+           */
+            const poster = new Poster();
+            poster.set('title', form.data.title);
+            poster.set('cost', form.data.cost);
+            poster.set('description', form.data.description);
+            poster.set('date', form.data.date);
+            poster.set('stock', form.data.stock);
+            poster.set('height', form.data.height);
+            poster.set('width', form.data.width);
+            poster.set('media_property_id', form.data.media_property_id);
+
             await poster.save();
+
+            let tags = form.data.tags;
+            if (tags) {
+                // the reason we split tags by comma
+                // is because attach function takes in an array of ids
+                // add new tags to the M:M tags relationship
+                await poster.tags().attach(tags.split(','));
+            }
+
             res.redirect('/posters');
         },
         'error': async (form) => {
@@ -75,7 +112,10 @@ router.get('/:poster_id/update', async (req,res) => {
     // fetch all Media Property
     const allMediaProperties = await getAllMediaProperties();
 
-    const posterForm = createPosterForm(allMediaProperties);
+    // fetch all tags
+    const allTags = await getAllTags();
+
+    const posterForm = createPosterForm(allMediaProperties, allTags);
 
     // fill in the existing fields
     posterForm.fields.title.value = posters.get('title');
@@ -86,6 +126,8 @@ router.get('/:poster_id/update', async (req,res) => {
     posterForm.fields.height.value = posters.get('height');
     posterForm.fields.width.value = posters.get('width');
     posterForm.fields.media_property_id.value = posters.get('media_property_id');
+    let selectedTags = await posters.related('tags').pluck('id');
+    posterForm.fields.tags.value = selectedTags;
 
     res.render('posters/update', {
         'form': posterForm.toHTML(bootstrapField),
@@ -96,22 +138,37 @@ router.get('/:poster_id/update', async (req,res) => {
 router.post('/:poster_id/update', async (req,res) => {
     // fetch the poster we want to update
     const posters = await getPosterById(req.params.poster_id)
-
-    // fetch all Media Property
     const allMediaProperties = await getAllMediaProperties();
+    const allTags = await getAllTags();
 
     // process the form 
-    const posterForm = createPosterForm(allMediaProperties);
+    const posterForm = createPosterForm(allMediaProperties, allTags);
     posterForm.handle(req, {
         'success': async (form) => {
-            posters.set(form.data);
+
+            let { tags, ...posterData } = form.data;
+
+            posters.set(posterData);
             posters.save();
+
+            let selectedTagIDs = tags.split(',');
+
+            //  get all the existing tags
+            let existingTags = await posters.related('tags').pluck('id');
+
+            // remove all the tags that are not selected anymore
+            let toRemove = existingTags.filter( id => selectedTagIDs.includes(id) === false);
+            
+            await posters.tags().detach(toRemove); // detach will take in an array of ids
+                                                   // those ids will be removed from the relationship
+            // add in all the new tags
+            await posters.tags().attach(selectedTagIDs);
+            
             res.redirect('/posters')
         },
         'error': async (form) => {
             res.render('posters/update', {
-                'form': form.toHTML(bootstrapField),
-                'posters': posters.toJSON()
+                'form': form.toHTML(bootstrapField)
             })
         }
     })

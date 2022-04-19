@@ -13,7 +13,7 @@
             <th>Stock</th>
             <th>Height</th>
             <th>Width</th>
-            <th></th>
+            <th>Tags</th>
         </tr>
     </thead>
     <tbody>
@@ -45,6 +45,11 @@
                 </td>
                 <td>
                     {{this.width}}
+                </td>
+                <td>
+                    {{#each this.tags}}
+                    <span class="badge bg-primary">{{this.name}}</span>
+                    {{/each}}
                 </td>
             <td>
                 <a href="/posters/{{this.id}}/update" class="btn btn-primary btn-sm">Update</a>
