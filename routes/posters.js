@@ -2,10 +2,17 @@ const express = require("express");
 const router = express.Router(); // #1 - Create a new express Router
 
 // 1. Import in the Poster model
-const { Poster, MediaProperty, Tag } = require('../models')
+const {
+    Poster,
+    MediaProperty,
+    Tag
+} = require('../models')
 
 // Import in the Forms
-const { createPosterForm, bootstrapField } = require('../forms');
+const {
+    createPosterForm,
+    bootstrapField
+} = require('../forms');
 
 async function getPosterById(posterId) {
     // eqv of
@@ -14,7 +21,7 @@ async function getPosterById(posterId) {
     const posters = await Poster.where({
         'id': posterId
     }).fetch({
-        require:true, // will cause an error if not found
+        require: true, // will cause an error if not found
         withRelated: ['mediaProperty', 'tags']
     });
 
@@ -22,17 +29,15 @@ async function getPosterById(posterId) {
 }
 
 async function getAllMediaProperties() {
-    const allMediaProperties = await MediaProperty.fetchAll().map( mediaProperty => {
-        return [ mediaProperty.get('id'), mediaProperty.get('name')]
+    const allMediaProperties = await MediaProperty.fetchAll().map(mediaProperty => {
+        return [mediaProperty.get('id'), mediaProperty.get('name')]
     });
     return allMediaProperties;
 }
 
 async function getAllTags() {
-    const allTags = await Tag.fetchAll().map( tag => 
-        [tag.get('id'), tag.get('name')]
-        );
-        return allTags;
+    const allTags = await Tag.fetchAll().map(tag => [tag.get('id'), tag.get('name')]);
+    return allTags;
 }
 
 router.get('/', async function (req, res) {
@@ -46,7 +51,7 @@ router.get('/', async function (req, res) {
     })
 })
 
-router.get('/create', async (req,res) => {
+router.get('/create', async (req, res) => {
 
     const allMediaProperties = await getAllMediaProperties();
 
@@ -66,15 +71,15 @@ router.post('/create', async (req, res) => {
 
     posterForm.handle(req, {
         'success': async (form) => {
-            
-           // create an instance of the Poster model
-           // if we refering to the MODEL directly, we are accessing the entire table
-           // if we referring to the instance of the model, then we are accessing one row
-           // eqv:
-           /*
-            insert into products (name, cost, description)
-             values (?, ?, ?)
-           */
+
+            // create an instance of the Poster model
+            // if we refering to the MODEL directly, we are accessing the entire table
+            // if we referring to the instance of the model, then we are accessing one row
+            // eqv:
+            /*
+             insert into products (name, cost, description)
+              values (?, ?, ?)
+            */
             const poster = new Poster();
             poster.set('title', form.data.title);
             poster.set('cost', form.data.cost);
@@ -94,6 +99,7 @@ router.post('/create', async (req, res) => {
                 // add new tags to the M:M tags relationship
                 await poster.tags().attach(tags.split(','));
             }
+            req.flash("success_messages", `New Poster ${poster.get('title')} has been created`)
 
             res.redirect('/posters');
         },
@@ -105,7 +111,7 @@ router.post('/create', async (req, res) => {
     })
 })
 
-router.get('/:poster_id/update', async (req,res) => {
+router.get('/:poster_id/update', async (req, res) => {
     // retrieve the poster
     const posters = await getPosterById(req.params.poster_id);
 
@@ -135,7 +141,7 @@ router.get('/:poster_id/update', async (req,res) => {
     })
 })
 
-router.post('/:poster_id/update', async (req,res) => {
+router.post('/:poster_id/update', async (req, res) => {
     // fetch the poster we want to update
     const posters = await getPosterById(req.params.poster_id)
     const allMediaProperties = await getAllMediaProperties();
@@ -146,7 +152,10 @@ router.post('/:poster_id/update', async (req,res) => {
     posterForm.handle(req, {
         'success': async (form) => {
 
-            let { tags, ...posterData } = form.data;
+            let {
+                tags,
+                ...posterData
+            } = form.data;
 
             posters.set(posterData);
             posters.save();
@@ -157,13 +166,13 @@ router.post('/:poster_id/update', async (req,res) => {
             let existingTags = await posters.related('tags').pluck('id');
 
             // remove all the tags that are not selected anymore
-            let toRemove = existingTags.filter( id => selectedTagIDs.includes(id) === false);
-            
+            let toRemove = existingTags.filter(id => selectedTagIDs.includes(id) === false);
+
             await posters.tags().detach(toRemove); // detach will take in an array of ids
-                                                   // those ids will be removed from the relationship
+            // those ids will be removed from the relationship
             // add in all the new tags
             await posters.tags().attach(selectedTagIDs);
-            
+
             res.redirect('/posters')
         },
         'error': async (form) => {
